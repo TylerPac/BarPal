@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    tools {
+        jdk 'jdk-21'
+    }
     environment {
         DOCKER_COMPOSE_FILE = "docker-compose.prod.yml"
     }
