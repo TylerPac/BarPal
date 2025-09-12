@@ -12,14 +12,14 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 script {
-                    sh 'docker-compose -f $DOCKER_COMPOSE_FILE build'
+                    sh 'docker compose -f $DOCKER_COMPOSE_FILE build'
                 }
             }
         }
         stage('Deploy') {
             steps {
                 script {
-                    sh 'docker-compose -f $DOCKER_COMPOSE_FILE up -d'
+                    sh 'docker compose -f $DOCKER_COMPOSE_FILE up -d'
                 }
             }
         }
