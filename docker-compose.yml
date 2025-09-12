@@ -16,7 +16,7 @@ services:
       - barpal-net
 
   barpal-backend:
-    build: ./barpal
+    build: ./barpal-backend
     container_name: barpal-backend
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/barpal_db
