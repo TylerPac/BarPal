@@ -1,0 +1,47 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: barpal-mysql-prod
+    environment:
+      MYSQL_ROOT_PASSWORD: prod_root_password
+      MYSQL_DATABASE: barpal_db_prod
+      MYSQL_USER: barpal_user_prod
+      MYSQL_PASSWORD: barpal_pass_prod
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data_prod:/var/lib/mysql
+    networks:
+      - barpal-net
+
+  barpal-backend:
+    build: ./barpal
+    container_name: barpal-backend-prod
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/barpal_db_prod
+      SPRING_DATASOURCE_USERNAME: barpal_user_prod
+      SPRING_DATASOURCE_PASSWORD: barpal_pass_prod
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    networks:
+      - barpal-net
+
+  barpal-web:
+    build: ./barpal-web
+    container_name: barpal-web-prod
+    ports:
+      - "80:80"
+    depends_on:
+      - barpal-backend
+    networks:
+      - barpal-net
+
+volumes:
+  mysql_data_prod:
+
+networks:
+  barpal-net:
+    driver: bridge
