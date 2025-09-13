@@ -32,6 +32,12 @@ pipeline {
             steps {
                 script {
                     // Build images (backend Dockerfile already skips tests via -DskipTests)
+                    sh 'echo Workspace contents:'
+                    sh 'ls -al'
+                    sh 'echo barpal-web directory:'
+                    sh 'ls -al barpal-web || true'
+                    sh 'echo barpal-backend directory:'
+                    sh 'ls -al barpal-backend || true'
                     sh 'docker compose -f $DOCKER_COMPOSE_FILE --env-file $ENV_FILE build'
                 }
             }

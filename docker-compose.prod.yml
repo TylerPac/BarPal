@@ -25,7 +25,9 @@ services:
       - barpal-net
 
   barpal-backend:
-    build: ./barpal-backend
+    build:
+      context: ./barpal-backend
+      dockerfile: Dockerfile
     image: barpal-backend-prod:latest
     container_name: barpal-backend-prod
     restart: unless-stopped
@@ -43,7 +45,9 @@ services:
       - barpal-net
 
   barpal-web:
-    build: ./barpal-web
+    build:
+      context: ./barpal-web
+      dockerfile: Dockerfile
     image: barpal-web-prod:latest
     container_name: barpal-web-prod
     restart: unless-stopped
