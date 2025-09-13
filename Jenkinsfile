@@ -82,8 +82,24 @@ pipeline {
         stage('Post-Deploy Health') {
             steps {
                 script {
-                    sh 'sleep 12'
-                    sh 'curl -f http://localhost:$BACKEND_HOST_PORT/actuator/health || (echo "Backend health endpoint failed" && docker logs barpal-backend-prod || true && exit 1)'
+                                        sh 'echo Checking running containers:'
+                                        sh 'docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'
+                                        // Retry up to 10 times over ~50s looking for UP status via actuator inside container
+                                        sh '''set -e
+attempt=1
+max=10
+until docker exec barpal-backend-prod curl -sf http://localhost:8080/actuator/health | grep -q '"status":"UP"'; do
+    echo "Health attempt $attempt/$max: not UP yet";
+    if [ $attempt -eq $max ]; then
+        echo "Backend failed to become healthy";
+        echo "Recent logs:";
+        docker logs --tail=200 barpal-backend-prod || true;
+        exit 1;
+    fi;
+    attempt=$((attempt+1));
+    sleep 5;
+done
+echo "Backend healthy."'''
                 }
             }
         }
