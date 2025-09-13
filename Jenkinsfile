@@ -7,9 +7,9 @@ pipeline {
         DOCKER_REGISTRY = ''
         IMAGE_PREFIX = 'barpal'
         BUILD_TAG = "${env.BUILD_NUMBER}"
+        BACKEND_HOST_PORT = '8083'
     }
     options {
-        ansiColor('xterm')
         timestamps()
     }
     stages {
@@ -76,9 +76,8 @@ pipeline {
         stage('Post-Deploy Health') {
             steps {
                 script {
-                    // Simple curl checks; adjust endpoints as features grow
-                    sh 'sleep 10'
-                    sh 'curl -f http://localhost:${BACKEND_HOST_PORT:-8083}/ || (echo "Backend not healthy" && exit 1)'
+                    sh 'sleep 12'
+                    sh 'curl -f http://localhost:$BACKEND_HOST_PORT/actuator/health || (echo "Backend health endpoint failed" && docker logs barpal-backend-prod || true && exit 1)'
                 }
             }
         }

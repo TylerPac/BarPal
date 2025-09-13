@@ -26,6 +26,7 @@ services:
 
   barpal-backend:
     build: ./barpal-backend
+    image: barpal-backend-prod:latest
     container_name: barpal-backend-prod
     restart: unless-stopped
     environment:
@@ -43,6 +44,7 @@ services:
 
   barpal-web:
     build: ./barpal-web
+    image: barpal-web-prod:latest
     container_name: barpal-web-prod
     restart: unless-stopped
     environment:
