@@ -1,38 +1,57 @@
+version: '3.8'
+
 services:
   mysql:
     image: mysql:8.0
     container_name: barpal-mysql
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: barpal_db
-      MYSQL_USER: barpal_user
-      MYSQL_PASSWORD: barpal_pass
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-barpal_db}
+      MYSQL_USER: ${MYSQL_USER:-barpal_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-barpal_pass}
     ports:
-      - "3306:3306"
+      # Use non-conflicting host port (change with MYSQL_HOST_PORT env var if needed)
+      - "${MYSQL_HOST_PORT:-3310}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - barpal-net
 
   barpal-backend:
     build: ./barpal-backend
     container_name: barpal-backend
+    restart: unless-stopped
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/barpal_db
-      SPRING_DATASOURCE_USERNAME: barpal_user
-      SPRING_DATASOURCE_PASSWORD: barpal_pass
+      # Spring will pick these up directly
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-barpal_db}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-barpal_user}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-barpal_pass}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
     ports:
-      - "8080:8080"
+      - "${BACKEND_HOST_PORT:-8080}:8080"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     networks:
       - barpal-net
 
   barpal-web:
     build: ./barpal-web
     container_name: barpal-web
+    restart: unless-stopped
+    environment:
+      # Optionally expose backend API URL to the frontend build/runtime
+      REACT_APP_API_BASE_URL: ${REACT_APP_API_BASE_URL:-http://localhost:${BACKEND_HOST_PORT:-8080}}
     ports:
-      - "3000:80"
+      # Avoid conflict with other frontends (TylerPacDevelopment uses 3000)
+      - "${WEB_HOST_PORT:-3001}:80"
     depends_on:
       - barpal-backend
     networks:

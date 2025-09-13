@@ -1,38 +1,54 @@
+version: '3.8'
+
 services:
   mysql:
     image: mysql:8.0
     container_name: barpal-mysql-prod
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: prod_root_password
-      MYSQL_DATABASE: barpal_db_prod
-      MYSQL_USER: barpal_user_prod
-      MYSQL_PASSWORD: barpal_pass_prod
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeMeProd!}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-barpal_db}
+      MYSQL_USER: ${MYSQL_USER:-barpal_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-barpal_pass}
     ports:
-      - "3306:3306"
+      # In production consider binding only to localhost or internal network; using 3310 by default
+      - "${MYSQL_HOST_PORT:-3310}:3306"
     volumes:
       - mysql_data_prod:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - barpal-net
 
   barpal-backend:
     build: ./barpal-backend
     container_name: barpal-backend-prod
+    restart: unless-stopped
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/barpal_db_prod
-      SPRING_DATASOURCE_USERNAME: barpal_user_prod
-      SPRING_DATASOURCE_PASSWORD: barpal_pass_prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-barpal_db}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-barpal_user}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-barpal_pass}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
     ports:
-      - "8080:8080"
+      - "${BACKEND_HOST_PORT:-8083}:8080"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     networks:
       - barpal-net
 
   barpal-web:
     build: ./barpal-web
     container_name: barpal-web-prod
+    restart: unless-stopped
+    environment:
+      REACT_APP_API_BASE_URL: ${REACT_APP_API_BASE_URL:-http://localhost:${BACKEND_HOST_PORT:-8083}}
     ports:
-      - "80:80"
+      - "${WEB_HOST_PORT:-3003}:80"
     depends_on:
       - barpal-backend
     networks:

@@ -1,25 +1,34 @@
-# Use an official OpenJDK runtime as a parent image
-FROM eclipse-temurin:21-jdk
+############################
+# Build stage
+############################
+FROM eclipse-temurin:21-jdk AS build
+WORKDIR /workspace
 
-# Set the working directory inside the container
-WORKDIR /app
-
-# Copy the Maven wrapper and pom.xml files
-
-COPY mvnw* pom.xml .
+COPY mvnw* pom.xml ./
 COPY .mvn .mvn
-
-# Make Maven wrapper executable
 RUN chmod +x mvnw
 
-# Copy the source code
+# Copy source after dependency download to leverage caching
 COPY src src
 
-# Package the application
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw -q -DskipTests clean package
 
-# Expose the port the app runs on
+############################
+# Runtime stage
+############################
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+
+# Add a non-root user
+RUN useradd -u 1001 spring && mkdir -p /app && chown -R spring:spring /app
+
+COPY --from=build /workspace/target/barpal-0.0.1-SNAPSHOT.jar app.jar
+
 EXPOSE 8080
+USER spring
 
-# Run the Spring Boot application
-CMD ["java", "-jar", "target/barpal-0.0.1-SNAPSHOT.jar"]
+ENV JAVA_OPTS=""
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD curl -f http://localhost:8080/actuator/health || exit 1
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

@@ -1,7 +1,16 @@
 pipeline {
     agent any
     environment {
-        DOCKER_COMPOSE_FILE = "docker-compose.prod.yml"
+        DOCKER_COMPOSE_FILE = 'docker-compose.prod.yml'
+        ENV_FILE = '.env.prod'
+        // Set a default registry (override with Jenkins credentials/params)
+        DOCKER_REGISTRY = ''
+        IMAGE_PREFIX = 'barpal'
+        BUILD_TAG = "${env.BUILD_NUMBER}"
+    }
+    options {
+        ansiColor('xterm')
+        timestamps()
     }
     stages {
         stage('Checkout') {
@@ -9,32 +18,88 @@ pipeline {
                 checkout scm
             }
         }
-        stage('Build Docker Images') {
+        stage('Prepare Environment') {
             steps {
                 script {
-                    sh 'docker compose -f $DOCKER_COMPOSE_FILE build'
+                    if (!fileExists(ENV_FILE)) {
+                        error "Missing ${ENV_FILE} needed for production compose run"
+                    }
+                    sh 'echo Using env file: $ENV_FILE'
                 }
             }
         }
-        stage('Deploy') {
+        stage('Docker Build') {
             steps {
                 script {
-                    sh 'docker compose -f $DOCKER_COMPOSE_FILE up -d'
+                    // Build images (backend Dockerfile already skips tests via -DskipTests)
+                    sh 'docker compose -f $DOCKER_COMPOSE_FILE --env-file $ENV_FILE build'
                 }
             }
         }
-        stage('Cleanup') {
+        stage('Tag Images') {
+            when { expression { return env.DOCKER_REGISTRY?.trim() } }
             steps {
                 script {
-                    sh 'docker system prune -f || true'
+                    def suffix = "$DOCKER_REGISTRY/$IMAGE_PREFIX"
+                    sh """
+                    docker tag barpal-backend-prod:latest ${suffix}-backend:${BUILD_TAG}
+                    docker tag barpal-web-prod:latest ${suffix}-web:${BUILD_TAG}
+                    docker tag barpal-backend-prod:latest ${suffix}-backend:latest
+                    docker tag barpal-web-prod:latest ${suffix}-web:latest
+                    """
+                }
+            }
+        }
+        stage('Push Images') {
+            when { expression { return env.DOCKER_REGISTRY?.trim() } }
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-registry-creds', usernameVariable: 'REG_USER', passwordVariable: 'REG_PASS')]) {
+                        sh 'echo $REG_PASS | docker login $DOCKER_REGISTRY -u $REG_USER --password-stdin'
+                        sh """
+                        docker push $DOCKER_REGISTRY/$IMAGE_PREFIX-backend:${BUILD_TAG}
+                        docker push $DOCKER_REGISTRY/$IMAGE_PREFIX-web:${BUILD_TAG}
+                        docker push $DOCKER_REGISTRY/$IMAGE_PREFIX-backend:latest
+                        docker push $DOCKER_REGISTRY/$IMAGE_PREFIX-web:latest
+                        """
+                    }
+                }
+            }
+        }
+        stage('Deploy (Compose Up)') {
+            steps {
+                script {
+                    sh 'docker compose -f $DOCKER_COMPOSE_FILE --env-file $ENV_FILE up -d'
+                }
+            }
+        }
+        stage('Post-Deploy Health') {
+            steps {
+                script {
+                    // Simple curl checks; adjust endpoints as features grow
+                    sh 'sleep 10'
+                    sh 'curl -f http://localhost:${BACKEND_HOST_PORT:-8083}/ || (echo "Backend not healthy" && exit 1)'
+                }
+            }
+        }
+        stage('Cleanup Old Images') {
+            steps {
+                script {
+                    sh 'docker image prune -f || true'
                 }
             }
         }
     }
     post {
+        success {
+            echo 'Deployment succeeded.'
+        }
+        failure {
+            echo 'Deployment failed.'
+        }
         always {
             echo 'Pipeline finished.'
         }
     }
 }
-// End of Jenkinsfile
+// End of Jenkinsfile (enhanced)
