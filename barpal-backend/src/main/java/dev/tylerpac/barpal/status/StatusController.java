@@ -1,8 +1,8 @@
 package dev.tylerpac.barpal.status;
 
-import dev.tylerpac.barpal.ollama.OllamaClient;
-import dev.tylerpac.barpal.ollama.dto.OllamaCompletionRequest;
-import dev.tylerpac.barpal.ollama.dto.OllamaCompletionResponse;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.dao.DataAccessException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,8 +10,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.Map;
+import dev.tylerpac.barpal.ollama.OllamaClient;
+import dev.tylerpac.barpal.ollama.dto.OllamaCompletionRequest;
+import dev.tylerpac.barpal.ollama.dto.OllamaCompletionResponse;
 
 @RestController
 @RequestMapping("/api/status")
@@ -45,7 +46,7 @@ public class StatusController {
     public Map<String, Object> testOllama(@RequestBody(required = false) Map<String, Object> body) {
         String prompt = body != null && body.get("prompt") != null ? body.get("prompt").toString() : "Say hello";
         OllamaCompletionRequest req = new OllamaCompletionRequest();
-        req.setModel("llama3");
+        req.setModel("llama3.1:8b");
         req.setPrompt(prompt);
         OllamaCompletionResponse resp = ollamaClient.generate(req);
         Map<String, Object> out = new HashMap<>();
