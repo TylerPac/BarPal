@@ -40,14 +40,15 @@ public class SecurityConfig {
                         .referrerPolicy(r -> r.policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
                         .permissionsPolicy(p -> p.policy("geolocation=(), microphone=(), camera=()"))
                 )
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-            // Allow CORS preflight (OPTIONS) globally so POST/json requests succeed
+        .authorizeHttpRequests(auth -> auth
+            // Basic infra & error endpoints
+            .requestMatchers("/actuator/health", "/actuator/info", "/error").permitAll()
+            // Allow CORS preflight globally
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/status/db").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/status/ollama-test").permitAll() // later restrict
-                        .anyRequest().denyAll()
-                );
+            // TEMP: Open all status endpoints for troubleshooting (tighten later)
+            .requestMatchers("/api/status/**").permitAll()
+            .anyRequest().denyAll()
+        );
         return http.build();
     }
 
