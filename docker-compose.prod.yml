@@ -53,7 +53,9 @@ services:
     container_name: barpal-web-prod
     restart: unless-stopped
     environment:
-      REACT_APP_API_BASE_URL: ${REACT_APP_API_BASE_URL:-http://localhost:${BACKEND_HOST_PORT:-8083}}
+      # Use a single-level default; avoid nested variable expansion inside default string
+      # Browser requests originate from the user's machine, so host localhost:8083 maps to backend container port mapping.
+      REACT_APP_API_BASE_URL: ${REACT_APP_API_BASE_URL:-http://localhost:8083}
     ports:
       - "${WEB_HOST_PORT:-3003}:80"
     depends_on:

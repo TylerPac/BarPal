@@ -19,6 +19,14 @@ import java.util.List;
 public class SecurityConfig {
 
     private static final String FRONTEND_ORIGIN = System.getenv().getOrDefault("FRONTEND_ORIGIN", "http://192.168.1.26:3003");
+    // Allow common local development variants; in production tighten to specific domain(s)
+    private static final List<String> LOCAL_ALLOWED = List.of(
+        FRONTEND_ORIGIN,
+        "http://localhost:3003",
+        "http://127.0.0.1:3003",
+        "http://localhost",
+        "http://127.0.0.1"
+    );
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -44,7 +52,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(FRONTEND_ORIGIN));
+    config.setAllowedOrigins(LOCAL_ALLOWED);
         config.setAllowedMethods(List.of("GET","POST","OPTIONS"));
         config.setAllowedHeaders(List.of("Content-Type","Authorization"));
         config.setAllowCredentials(false); // no cookies / auth yet
