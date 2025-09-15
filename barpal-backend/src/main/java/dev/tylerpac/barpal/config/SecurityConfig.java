@@ -42,6 +42,8 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+            // Allow CORS preflight (OPTIONS) globally so POST/json requests succeed
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/status/db").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/status/ollama-test").permitAll() // later restrict
                         .anyRequest().denyAll()

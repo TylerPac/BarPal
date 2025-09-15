@@ -1,4 +1,5 @@
 F:\BarPal\barpal-backend\src\main\java\dev\tylerpac\barpal\BarpalApplication.java
+F:\BarPal\barpal-backend\src\main\java\dev\tylerpac\barpal\config\SecurityConfig.java
 F:\BarPal\barpal-backend\src\main\java\dev\tylerpac\barpal\ollama\dto\OllamaCompletionRequest.java
 F:\BarPal\barpal-backend\src\main\java\dev\tylerpac\barpal\ollama\dto\OllamaCompletionResponse.java
 F:\BarPal\barpal-backend\src\main\java\dev\tylerpac\barpal\ollama\OllamaClient.java
