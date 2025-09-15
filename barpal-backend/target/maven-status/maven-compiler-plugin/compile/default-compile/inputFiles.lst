@@ -1,1 +1,9 @@
-F:\BarPal\barpal\src\main\java\dev\tylerpac\barpal\BarpalApplication.java
+F:\BarPal\barpal-backend\src\main\java\dev\tylerpac\barpal\BarpalApplication.java
+F:\BarPal\barpal-backend\src\main\java\dev\tylerpac\barpal\ollama\dto\OllamaCompletionRequest.java
+F:\BarPal\barpal-backend\src\main\java\dev\tylerpac\barpal\ollama\dto\OllamaCompletionResponse.java
+F:\BarPal\barpal-backend\src\main\java\dev\tylerpac\barpal\ollama\OllamaClient.java
+F:\BarPal\barpal-backend\src\main\java\dev\tylerpac\barpal\ollama\OllamaController.java
+F:\BarPal\barpal-backend\src\main\java\dev\tylerpac\barpal\ollama\OllamaProperties.java
+F:\BarPal\barpal-backend\src\main\java\dev\tylerpac\barpal\status\DbStatusRepository.java
+F:\BarPal\barpal-backend\src\main\java\dev\tylerpac\barpal\status\StatusController.java
+F:\BarPal\barpal-backend\src\main\java\dev\tylerpac\barpal\status\StatusProbeEntity.java
